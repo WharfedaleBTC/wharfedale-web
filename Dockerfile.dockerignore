@@ -1,0 +1,9 @@
+# Context = parent of wharfedale-web/ and wharfedale-sdk-ts/.
+**/node_modules
+**/dist
+**/target
+**/.git
+malachite
+wharfedale
+wharfedale-sdk-rs
+wharfedale-web/config.json

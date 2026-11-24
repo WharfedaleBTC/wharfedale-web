@@ -1,0 +1,14 @@
+{
+  "listen": "127.0.0.1:8080",
+  "publicNode": "http://127.0.0.1:18447",
+  "nodes": [
+    { "name": "node0", "rpc": "http://127.0.0.1:18443" },
+    { "name": "node1", "rpc": "http://127.0.0.1:18444" },
+    { "name": "node2", "rpc": "http://127.0.0.1:18445" },
+    { "name": "node3", "rpc": "http://127.0.0.1:18446" },
+    { "name": "rpc0", "rpc": "http://127.0.0.1:18447" }
+  ],
+  "docsUrl": "https://wharfedalebtc.github.io/wharfedale/",
+  "nativeAsset": { "ticker": "WFD", "name": "Wharfedale fee asset", "precision": 0 },
+  "faucet": { "keyFile": "faucet.json", "amount": 100000, "cooldownMinutes": 10, "minCoins": 20 }
+}

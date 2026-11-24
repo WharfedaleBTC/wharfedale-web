@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useConfig } from '../lib/api';
+import { copyText } from '../lib/clipboard';
 import { DOC_PAGES, EXAMPLES } from '../lib/examples';
 import { Masthead, SectionHead } from '../components/Layout';
 import { ArrowUpRight } from '../components/icons';
@@ -27,8 +28,7 @@ function Code({ code, label, file }: { code: string; label: string; file: string
           className="copy"
           data-done={copied ? '' : undefined}
           onClick={async () => {
-            await navigator.clipboard?.writeText(code);
-            setCopied(true);
+            setCopied(await copyText(code));
             setTimeout(() => setCopied(false), 1500);
           }}
         >

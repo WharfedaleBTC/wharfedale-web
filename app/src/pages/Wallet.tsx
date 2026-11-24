@@ -10,6 +10,7 @@ import { Masthead } from '../components/Layout';
 import { ArrowDownLeft, ArrowRight, ArrowUpRight } from '../components/icons';
 import { Marks, Ticker, reveal } from '../components/motion';
 import { Qr } from '../components/Qr';
+import { copyText } from '../lib/clipboard';
 
 function AssetRow({ id, amount, tokenOf, index }: { id: string; amount: number; tokenOf?: AssetRecord; index: number }) {
   const view = useAssetView(tokenOf ? undefined : id);
@@ -61,8 +62,7 @@ function ReceiveCard({ address }: { address: string }) {
           <button
             className="button button--accent"
             onClick={async () => {
-              await navigator.clipboard?.writeText(address);
-              setCopied(true);
+              setCopied(await copyText(address));
               setTimeout(() => setCopied(false), 1500);
             }}
           >

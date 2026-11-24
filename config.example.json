@@ -9,6 +9,6 @@
     { "name": "rpc0", "rpc": "http://127.0.0.1:18447" }
   ],
   "docsUrl": "https://wharfedalebtc.github.io/wharfedale/",
-  "nativeAsset": { "ticker": "WFD", "name": "Wharfedale fee asset", "precision": 0 },
+  "nativeAsset": { "ticker": "WBTC", "name": "Wrapped Bitcoin", "precision": 8 },
   "faucet": { "keyFile": "faucet.json", "amount": 100000, "cooldownMinutes": 10, "minCoins": 20 }
 }

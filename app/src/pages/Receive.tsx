@@ -3,6 +3,7 @@ import { Masthead } from '../components/Layout';
 import { Marks } from '../components/motion';
 import { Qr } from '../components/Qr';
 import { useWallets } from '../lib/wallets';
+import { copyText } from '../lib/clipboard';
 
 export function Receive() {
   const { active, key } = useWallets();
@@ -46,13 +47,12 @@ export function Receive() {
               <button
                 className="button button--lg button--primary"
                 onClick={async () => {
-                  await navigator.clipboard?.writeText(address);
-                  setCopied(true);
+                  setCopied(await copyText(address));
                 }}
               >
                 {copied ? 'Copied' : 'Copy address'}
               </button>
-              <button className="button button--lg button--secondary" onClick={() => (navigator.share ? navigator.share({ text: address }).catch(() => undefined) : navigator.clipboard?.writeText(address))}>
+              <button className="button button--lg button--secondary" onClick={() => (navigator.share ? navigator.share({ text: address }).catch(() => undefined) : copyText(address))}>
                 Share
               </button>
             </div>

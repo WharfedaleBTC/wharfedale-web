@@ -5,6 +5,7 @@ import { ago, short } from '../lib/format';
 import { SectionHead } from '../components/Layout';
 import { NetworkScene, nodeKind, nodeState, orderNodes } from '../components/NetworkScene';
 import { NodeIcon } from '../components/NodeGlyph';
+import { CopyValue } from '../components/Copy';
 import { ArrowRight, ArrowUpRight, IconAsset, IconBlocks, IconDocs, IconDrop, IconWallet } from '../components/icons';
 import { Marks, Ticker, Words, reveal, useNow } from '../components/motion';
 
@@ -106,7 +107,8 @@ export function Home() {
                         <span className="block-rail__fill" />
                       </span>
                       <span className="block-rail__name">
-                        #{b.height.toLocaleString('en-US')} · {b.tx_count} tx
+                        #{b.height.toLocaleString('en-US')}
+                        <span className="block-rail__txs"> · {b.tx_count} tx</span>
                       </span>
                     </Link>
                   </li>
@@ -124,38 +126,48 @@ export function Home() {
           title="Who is online"
           aside={g ? `${g.nodes.length} nodes, ${g.edges.length} links. Heights and peers come from each node's getnetworkinfo.` : 'Polling the nodes…'}
         />
-        <ol className="index" style={{ borderTop: 0 }}>
+        <ol className="node-list">
           {g &&
             orderNodes(g.nodes).map((node, i) => {
               const state = nodeState(node, g.tip);
               const behind = node.height !== null && g.tip !== null ? g.tip - node.height : 0;
+              const status =
+                state === 'offline' ? ['badge badge--danger', 'offline'] : state === 'lagging' ? ['badge badge--caution', `${behind} behind`] : ['badge badge--accent', 'online'];
               return (
-                <li key={node.id} className="index__row" {...reveal('up', i * 60, { gridTemplateColumns: '2.5rem 3.5rem minmax(0, 1fr) auto' })}>
-                  <span className="index-no">{String(i + 1).padStart(2, '0')}</span>
-                  <NodeIcon kind={nodeKind(node)} state={state} />
-                  <span style={{ minWidth: 0 }}>
-                    <span className="index__title">{node.name}</span>
-                    <span className="data" style={{ display: 'block', marginTop: '0.25rem' }}>
-                      {node.id.startsWith('config:') ? 'from config' : `…${node.id.slice(-10)}`}
-                      {node.address ? ` · ${node.address.slice(0, 10)}…` : ''}
-                    </span>
-                  </span>
-                  <span className="row" style={{ justifyContent: 'flex-end', gap: '0.5rem 1.5rem' }}>
-                    <span className="data" style={{ textAlign: 'right' }}>
-                      {!node.online
-                        ? 'not answering'
-                        : node.height === null
-                          ? 'seen as a peer'
-                          : `${node.height.toLocaleString('en-US')}${behind > 1 ? ` · ${behind} behind` : ''} · ${node.peers} peers${node.mempool !== null ? ` · ${node.mempool} in mempool` : ''}`}
-                    </span>
-                    <span
-                      className={
-                        state === 'offline' ? 'badge badge--danger' : state === 'lagging' ? 'badge badge--caution' : node.role === 'validator' ? 'badge badge--signal' : 'badge'
-                      }
-                    >
-                      {state === 'offline' ? 'offline' : state === 'lagging' ? 'lagging' : node.role === 'full' ? 'full node' : node.role}
-                    </span>
-                  </span>
+                <li key={node.id} className="node-row" {...reveal('up', i * 60)}>
+                  <div className="node-row__head">
+                    <span className="index-no">{String(i + 1).padStart(2, '0')}</span>
+                    <NodeIcon kind={nodeKind(node)} state={state} />
+                    <div style={{ minWidth: 0 }}>
+                      <div className="index__title">{node.name}</div>
+                      <div className="row" style={{ gap: '0.375rem', marginTop: '0.5rem' }}>
+                        <span className={node.role === 'validator' ? 'badge badge--signal' : 'badge'}>{node.role === 'full' ? 'full node' : node.role}</span>
+                        <span className={status[0]}>{status[1]}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <dl className="node-row__stats">
+                    <div>
+                      <dt>Height</dt>
+                      <dd>{node.height?.toLocaleString('en-US') ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>Peers</dt>
+                      <dd>{node.peers ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>Mempool</dt>
+                      <dd>{node.mempool ?? '—'}</dd>
+                    </div>
+                  </dl>
+                  <div className="node-row__ids">
+                    {node.id.startsWith('config:') ? (
+                      <p className="hint">Not answering: no peer id yet.</p>
+                    ) : (
+                      <CopyValue label="Peer ID" value={node.id} />
+                    )}
+                    {node.address && <CopyValue label="Consensus address" value={node.address} />}
+                  </div>
                 </li>
               );
             })}

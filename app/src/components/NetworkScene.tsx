@@ -1,8 +1,8 @@
 // The live network as an isometric scene: nodes stand on a floor grid around a ring, links run
 // along the floor, and each new block sends pulses out from the validator that proposed it.
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef } from 'react';
 import type { NetworkGraph } from '../lib/api';
-import { DARK, NodeGlyph, footprint, glyphTop, iso, type NodeKind, type NodeState, type Pt } from './NodeGlyph';
+import { DARK, NodeGlyph, footprint, iso, type NodeKind, type NodeState, type Pt } from './NodeGlyph';
 import { reducedMotion } from './motion';
 
 type Node = NetworkGraph['nodes'][number];
@@ -104,9 +104,6 @@ export function NetworkScene({ graph, proposer, blockId }: { graph: NetworkGraph
     }
   }, [blockId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [hover, setHover] = useState<string | null>(null);
-  const hovered = hover ? order.find((x) => x.id === hover) : undefined;
-  const hp = hovered ? pos.get(hovered.id) : undefined;
   const depth = [...order].sort((a, b) => (pos.get(a.id)?.[1] ?? 0) - (pos.get(b.id)?.[1] ?? 0));
 
   return (
@@ -150,13 +147,8 @@ export function NetworkScene({ graph, proposer, blockId }: { graph: NetworkGraph
               <g
                 className="scene__node"
                 style={{ animationDelay: `${120 + i * 90}ms` }}
-                tabIndex={0}
                 role="img"
                 aria-label={`${node.name}, ${node.role === 'full' ? 'full node' : node.role}, ${m.text.toLowerCase()}`}
-                onMouseEnter={() => setHover(node.id)}
-                onMouseLeave={() => setHover(null)}
-                onFocus={() => setHover(node.id)}
-                onBlur={() => setHover(null)}
               >
                 <polygon className="scene__ring" points={footprint(kind, 16)} />
                 {src?.id === node.id && blockId && <polygon key={blockId} className="scene__halo" points={footprint(kind, 12)} />}
@@ -174,34 +166,6 @@ export function NetworkScene({ graph, proposer, blockId }: { graph: NetworkGraph
           );
         })}
       </svg>
-      {hovered && hp && (
-        <div className="scene__tip" style={{ left: `${((hp[0] - vb.x) / vb.w) * 100}%`, top: `${((hp[1] - glyphTop(nodeKind(hovered)) - 6 - vb.y) / vb.h) * 100}%` }}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <strong className="h3">{hovered.name}</strong>
-            <span className={hovered.role === 'validator' ? 'badge badge--signal' : 'badge'}>{hovered.role === 'full' ? 'full node' : hovered.role}</span>
-          </div>
-          <dl className="dl" style={{ marginTop: '0.5rem' }}>
-            <div>
-              <dt>Height</dt>
-              <dd>{hovered.height?.toLocaleString('en-US') ?? (hovered.online ? 'not polled' : 'offline')}</dd>
-            </div>
-            <div>
-              <dt>Peers</dt>
-              <dd>{hovered.peers ?? (adj.get(hovered.id)?.length ?? 0)}</dd>
-            </div>
-            {hovered.mempool !== null && (
-              <div>
-                <dt>Mempool</dt>
-                <dd>{hovered.mempool} tx</dd>
-              </div>
-            )}
-            <div>
-              <dt>Peer id</dt>
-              <dd>…{hovered.id.slice(-10)}</dd>
-            </div>
-          </dl>
-        </div>
-      )}
     </div>
   );
 }

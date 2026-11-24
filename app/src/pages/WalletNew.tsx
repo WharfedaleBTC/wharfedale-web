@@ -5,6 +5,7 @@ import { Masthead } from '../components/Layout';
 import { Marks } from '../components/motion';
 import { ArrowRight } from '../components/icons';
 import { wallets, useWallets } from '../lib/wallets';
+import { copyText } from '../lib/clipboard';
 
 export function Phrase({ phrase }: { phrase: string }) {
   return (
@@ -58,8 +59,7 @@ export function WalletNew() {
               <button
                 className="button button--secondary"
                 onClick={async () => {
-                  await navigator.clipboard?.writeText(phrase);
-                  setCopied(true);
+                  setCopied(await copyText(phrase));
                 }}
               >
                 {copied ? 'Copied' : 'Copy words'}

@@ -120,12 +120,12 @@ fn main() -> Result<(), wharfedale_sdk::Error> {
     let issuer = Wallet::new(client.clone(), Key::from_mnemonic("<your 12 words>")?);
 
     let meta = AssetMetadata::new("Demo Points", "DPT", 2)?;
-    // 1 000 000 base units (10 000.00 DPT), 1 reissuance token, fee 1 000.
-    let issued = issuer.issue_named(1_000_000, 1, 1_000, &meta)?;
+    // 1 000 000 base units (10 000.00 DPT), 1 reissuance token, fee 100.
+    let issued = issuer.issue_named(1_000_000, 1, 100, &meta)?;
     println!("asset {} (token {})", issued.asset, issued.token);
 
     // Later, with the token: mint 500.00 more.
-    issuer.reissue(issued.asset, 50_000, 1_000)?;
+    issuer.reissue(issued.asset, 50_000, 100)?;
     Ok(())
 }`,
     ts: `import { Client, Key, Wallet } from '@wharfedale/sdk';
@@ -133,8 +133,8 @@ fn main() -> Result<(), wharfedale_sdk::Error> {
 const client = new Client('http://127.0.0.1:18447');
 const issuer = new Wallet(client, Key.fromMnemonic('<your 12 words>'));
 
-// 1 000 000 base units (10 000.00 DPT), 1 reissuance token, fee 1 000.
-const issued = await issuer.issue(1_000_000, 1, 1_000, { name: 'Demo Points', ticker: 'DPT', precision: 2 });
+// 1 000 000 base units (10 000.00 DPT), 1 reissuance token, fee 100.
+const issued = await issuer.issue(1_000_000, 1, 100, { name: 'Demo Points', ticker: 'DPT', precision: 2 });
 console.log(\`asset \${issued.asset} (token \${issued.token})\`);
 
 // Later, with the token: mint 500.00 more.

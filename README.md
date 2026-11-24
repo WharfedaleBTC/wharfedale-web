@@ -58,13 +58,14 @@ confirmed coins.
 
 ## Run
 
-With the node repository's Docker network (`../wharfedale`):
+With the node repository's Docker network, which builds this app from source:
 
 ```bash
-docker compose -f ../wharfedale/docker/compose.yml --profile web up -d --build
+make -C ../wharfedale run
 ```
 
-Then open <http://localhost:8080>. For development against that network:
+Then open <http://localhost:8080>. From the published images instead (no source needed), see
+`../demo-prod`. For development against that network:
 
 ```bash
 docker compose -f ../wharfedale/docker/compose.yml cp node0:/net/faucet.json faucet.json
@@ -103,6 +104,13 @@ letterspaced) for numbers, labels and buttons.
 
 Tokens and components are in `app/src/styles.css`; the Docs page's examples are in
 `app/src/lib/examples.ts` (keep them in step with the SDK READMEs).
+
+## CI and images
+
+`.github/workflows/ci.yml` builds and type-checks the app against `WharfedaleBTC/wharfedale-sdk-ts`
+(checked out next to it, as locally). On `master` it publishes
+`ghcr.io/wharfedalebtc/wharfedale-web:latest` (linux/amd64, linux/arm64) and keeps the built app
+as a workflow artifact; a `vX.Y.Z` tag adds `:X.Y.Z` and a GitHub Release with the built app.
 
 ## Notes
 

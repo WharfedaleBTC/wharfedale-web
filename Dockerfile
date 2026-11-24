@@ -1,7 +1,7 @@
 # wharfedale-web: the built app and its server.
 # Build context: the directory holding wharfedale-web/ and wharfedale-sdk-ts/, e.g.
 #   docker build -f wharfedale-web/Dockerfile -t wharfedale-web:dev .
-# (wharfedale/docker/compose.yml, profile `web`, does this for you.)
+# (`make run` in ../wharfedale does this for you; CI publishes ghcr.io/wharfedalebtc/wharfedale-web.)
 
 FROM node:22.16-bookworm-slim AS build
 WORKDIR /src

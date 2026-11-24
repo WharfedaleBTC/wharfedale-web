@@ -1,0 +1,118 @@
+# Builds and type-checks the web app; on master and on version tags publishes its Docker image
+# to ghcr.io/wharfedalebtc/wharfedale-web (linux/amd64 + linux/arm64).
+#
+#   push to master   → image tags `latest` and `sha-<short>`; the built app as a workflow artifact
+#   push tag vX.Y.Z  → image tags `X.Y.Z`, `X.Y` and `sha-<short>`; a GitHub Release with the built app
+#   pull request     → build only
+#
+# The app depends on the TypeScript SDK by path (`file:../wharfedale-sdk-ts`), so CI checks out
+# WharfedaleBTC/wharfedale-sdk-ts at SDK_TS_REF next to it, as locally.
+name: ci
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SDK_TS_REF: master
+  IMAGE: ghcr.io/wharfedalebtc/wharfedale-web
+  NODE_VERSION: "22.16"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { path: wharfedale-web, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/wharfedale-sdk-ts, ref: "${{ env.SDK_TS_REF }}", path: wharfedale-sdk-ts, persist-credentials: false }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Lifecycle scripts stay off (.npmrc: ignore-scripts), as in the Dockerfile.
+      - name: SDK
+        working-directory: wharfedale-sdk-ts
+        run: npm ci --ignore-scripts && npm run build
+      - name: Build (type-checks app and server)
+        working-directory: wharfedale-web
+        run: npm ci --ignore-scripts && npm run build
+
+      - name: Package
+        if: github.event_name != 'pull_request'
+        run: tar -czf "$RUNNER_TEMP/wharfedale-web-dist.tar.gz" -C wharfedale-web dist package.json package-lock.json config.example.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name != 'pull_request'
+        with:
+          name: wharfedale-web-dist
+          path: ${{ runner.temp }}/wharfedale-web-dist.tar.gz
+          retention-days: 30
+
+  image:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { path: wharfedale-web, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/wharfedale-sdk-ts, ref: "${{ env.SDK_TS_REF }}", path: wharfedale-sdk-ts, persist-credentials: false }
+
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+      - name: Build and push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: wharfedale-web/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: wharfedale-web-dist
+          path: dist
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.tar.gz --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes \
+            --notes "Image: \`${IMAGE}:${GITHUB_REF_NAME#v}\` (linux/amd64, linux/arm64)."

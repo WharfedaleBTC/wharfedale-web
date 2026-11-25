@@ -21,6 +21,12 @@ export interface Config {
     /** Keep at least this many spendable faucet coins (one payout per coin per block). */
     minCoins: number;
   };
+  /**
+   * Behind a reverse proxy: take the client address (faucet limit) from the last
+   * `X-Forwarded-For` entry, which that proxy appends. Default false: the socket address
+   * (otherwise any client could pick its own address with the header).
+   */
+  trustProxy?: boolean;
   /** Base URL of the mdBook docs (the Docs page links into it). */
   docsUrl?: string;
   /** Folder with the built app; default dist/app next to the server. */

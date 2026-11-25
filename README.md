@@ -31,10 +31,10 @@ sees a key.
 
 | Endpoint | |
 |---|---|
-| `POST /api/node` | JSON-RPC to `publicNode`, only: `getblockchaininfo`, `getblockcount`, `getblockhash`, `getrawtransaction`, `getscriptutxos`, `testmempoolaccept`, `sendrawtransaction` |
+| `POST /api/node` | JSON-RPC to `publicNode`, only: `getblockchaininfo`, `getblockcount`, `getblockhash`, `getrawtransaction`, `getscriptutxos`, `testmempoolaccept` (one transaction), `sendrawtransaction`; bodies up to 2 MiB |
 | `GET /api/node/*` | Esplora GET paths (blocks, block txs, tx, asset, address, mempool txids, fee estimates) |
 | `GET /api/network` | `getnetworkinfo` of every configured node, merged into `{nodes, edges, tip}` |
-| `GET/POST /api/faucet` | Faucet status; pay `{address}` (one payout per address and per client every `cooldownMinutes`) |
+| `GET/POST /api/faucet` | Faucet status; pay `{address}` (a `wfc1…`/`wf1…` address; one payout per output script and per client IP every `cooldownMinutes`) |
 | `GET /api/config` | Native asset label, faucet settings and the docs URL for the app |
 | `/*` | The built app |
 
@@ -54,6 +54,7 @@ confirmed coins.
 | `nodes` | `[{name, rpc}]` drawn on the network page (home) |
 | `nativeAsset` | `{ticker, name, precision}` of the fee asset |
 | `faucet` | `{keyFile, amount, cooldownMinutes, minCoins}`; omit to disable |
+| `trustProxy` | `true` behind a reverse proxy: the faucet takes the client IP from the last `X-Forwarded-For` entry. Default `false` (socket address): never enable it without a proxy, or clients can pick their own IP |
 | `docsUrl` | Base URL of the node's mdBook; default `https://wharfedalebtc.github.io/wharfedale/` |
 
 ## Run

@@ -33,27 +33,34 @@ export class Faucet {
 
   /** Pays `amount` to `address`; `client` identifies the requester (IP). */
   pay(address: string, client: string): Promise<string> {
+    // Addresses only (a hex script could be anything, e.g. a burn), and the limit is per output
+    // script: `wfc1…`, `wf1…` and upper case are the same recipient.
+    let script: string;
     try {
-      destination(address);
+      if (!/^wfc?1/i.test(address)) throw new Error();
+      script = destination(address).script.toString('hex');
     } catch {
       return Promise.reject(new FaucetError('not a Wharfedale address', 400));
     }
     const now = Date.now();
     const window = this.settings.cooldownMinutes * 60_000;
-    for (const key of [`a:${address}`, `c:${client}`]) {
+    for (const [key, last] of this.#recent) if (now - last >= window) this.#recent.delete(key);
+    const keys = [`a:${script}`, `c:${client}`];
+    for (const key of keys) {
       const last = this.#recent.get(key);
-      if (last !== undefined && now - last < window) {
+      if (last !== undefined) {
         const minutes = Math.ceil((window - (now - last)) / 60_000);
         return Promise.reject(new FaucetError(`already paid recently; try again in ${minutes} min`, 429));
       }
     }
+    // Reserve before paying: concurrent requests from one client or for one address must not
+    // all pass the check while the first payout is queued.
+    for (const key of keys) this.#recent.set(key, now);
     const run = this.#queue.then(async () => {
       try {
-        const txid = await this.#wallet.send(address, this.settings.amount);
-        this.#recent.set(`a:${address}`, now);
-        this.#recent.set(`c:${client}`, now);
-        return txid;
+        return await this.#wallet.send(address, this.settings.amount);
       } catch (e) {
+        for (const key of keys) this.#recent.delete(key);
         throw new FaucetError(`faucet unavailable: ${(e as Error).message}`, 503);
       }
     });

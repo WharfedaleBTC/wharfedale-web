@@ -44,6 +44,10 @@ export async function forwardRpc(c: Context, node: string): Promise<Response> {
   if (typeof body.method !== 'string' || !RPC_METHODS.has(body.method)) {
     return c.json({ result: null, error: { code: -32601, message: 'method not allowed' }, id: body.id ?? null }, 403);
   }
+  // The node verifies every transaction of a testmempoolaccept batch: one per request here.
+  if (body.method === 'testmempoolaccept' && !(Array.isArray(body.params) && Array.isArray(body.params[0]) && body.params[0].length <= 1)) {
+    return c.json({ result: null, error: { code: -32602, message: 'testmempoolaccept: one transaction per request' }, id: body.id ?? null }, 400);
+  }
   const res = await fetch(node, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

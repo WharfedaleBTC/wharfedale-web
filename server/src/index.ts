@@ -6,6 +6,7 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { getConnInfo } from '@hono/node-server/conninfo';
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { Client } from '@wharfedale/sdk';
 import { loadConfig } from './config.js';
 import { forwardEsplora, forwardRpc } from './proxy.js';
@@ -23,7 +24,9 @@ app.get('/api/config', (c) =>
     docsUrl: (config.docsUrl ?? 'https://wharfedalebtc.github.io/wharfedale/').replace(/\/?$/, '/'),
   }),
 );
-app.post('/api/node', (c) => forwardRpc(c, config.publicNode));
+// A JSON-RPC body is at most one transaction (≤ 400 000 weight units, ~800 kB hex).
+const tooLarge = bodyLimit({ maxSize: 2 * 1024 * 1024, onError: (c) => c.json({ error: 'request too large' }, 413) });
+app.post('/api/node', tooLarge, (c) => forwardRpc(c, config.publicNode));
 app.get('/api/node/*', (c) => forwardEsplora(c, config.publicNode, c.req.path.slice('/api/node/'.length)));
 app.get('/api/network', async (c) => c.json(await buildGraph(config.nodes)));
 
@@ -31,11 +34,12 @@ app.get('/api/faucet', async (c) => {
   if (!faucet) return c.json({ error: 'faucet disabled' }, 404);
   return c.json(await faucet.status());
 });
-app.post('/api/faucet', async (c) => {
+app.post('/api/faucet', bodyLimit({ maxSize: 4096, onError: (c) => c.json({ error: 'request too large' }, 413) }), async (c) => {
   if (!faucet) return c.json({ error: 'faucet disabled' }, 404);
   const body = await c.req.json().catch(() => ({}) as { address?: unknown });
   const address = typeof body.address === 'string' ? body.address.trim() : '';
-  const client = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || getConnInfo(c).remote.address || 'unknown';
+  const forwarded = config.trustProxy ? c.req.header('x-forwarded-for')?.split(',').pop()?.trim() : undefined;
+  const client = forwarded || getConnInfo(c).remote.address || 'unknown';
   try {
     return c.json({ txid: await faucet.pay(address, client) });
   } catch (e) {

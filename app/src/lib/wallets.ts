@@ -1,5 +1,5 @@
 // Demo wallets, kept in this browser only (localStorage, unencrypted).
-import { useSyncExternalStore } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 import { Key } from '@wharfedale/sdk';
 
 export interface StoredWallet {
@@ -64,5 +64,8 @@ export function useWallets() {
     read,
   );
   const active = store.wallets.find((w) => w.name === store.active) ?? null;
-  return { store, active, key: active ? Key.fromSecret(active.secret) : null };
+  // One Key per wallet, so effects that depend on it don't rerun on every render.
+  const secret = active?.secret;
+  const key = useMemo(() => (secret ? Key.fromSecret(secret) : null), [secret]);
+  return { store, active, key };
 }

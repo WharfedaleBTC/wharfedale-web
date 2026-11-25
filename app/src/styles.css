@@ -261,7 +261,7 @@ a.text-link:hover { text-decoration-color: currentColor; }
 .menu::before { content: ''; position: absolute; inset: 0; opacity: 0.06; pointer-events: none; background-image: repeating-linear-gradient(to right, #fff 0 1px, transparent 1px 25%); }
 .menu__list { position: relative; border-top: 1px solid var(--paper-12); }
 .menu__link { display: flex; align-items: baseline; gap: 1.25rem; padding-block: 1rem; border-bottom: 1px solid var(--paper-12); font-size: var(--text-d3); font-weight: 600; font-stretch: 96%; letter-spacing: -0.026em; line-height: 1; color: #fff; animation: rise-in 700ms var(--ease) both; animation-delay: calc(var(--i, 0) * 55ms + 60ms); }
-.menu__link .index-no { color: var(--accent); }
+.menu__link .index-no { color: var(--accent); min-width: calc(2ch + 0.12em); }
 .menu__link[aria-current='page'] { color: var(--accent); }
 .menu__foot { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; animation: fade-in 600ms var(--ease) 300ms both; }
 

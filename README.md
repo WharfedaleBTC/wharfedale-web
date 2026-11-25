@@ -56,6 +56,7 @@ confirmed coins.
 | `faucet` | `{keyFile, amount, cooldownMinutes, minCoins}`; omit to disable |
 | `trustProxy` | `true` behind a reverse proxy: the faucet takes the client IP from the last `X-Forwarded-For` entry. Default `false` (socket address): never enable it without a proxy, or clients can pick their own IP |
 | `docsUrl` | Base URL of the node's mdBook; default `https://wharfedalebtc.github.io/wharfedale/` |
+| `lendingUrl` | The lending app ([simplicity-lending](https://github.com/WharfedaleBTC/simplicity-lending)); when set, the top bar links to it after Assets. Omit to hide the link |
 
 ## Run
 

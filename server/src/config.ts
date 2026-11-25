@@ -29,6 +29,8 @@ export interface Config {
   trustProxy?: boolean;
   /** Base URL of the mdBook docs (the Docs page links into it). */
   docsUrl?: string;
+  /** The lending app (simplicity-lending); when set, the top bar links to it after Assets. */
+  lendingUrl?: string;
   /** Folder with the built app; default dist/app next to the server. */
   staticDir?: string;
 }

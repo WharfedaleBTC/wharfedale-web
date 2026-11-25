@@ -22,6 +22,7 @@ app.get('/api/config', (c) =>
     nativeAsset: config.nativeAsset,
     faucet: config.faucet ? { amount: config.faucet.amount, cooldownMinutes: config.faucet.cooldownMinutes } : null,
     docsUrl: (config.docsUrl ?? 'https://wharfedalebtc.github.io/wharfedale/').replace(/\/?$/, '/'),
+    lendingUrl: config.lendingUrl || null,
   }),
 );
 // A JSON-RPC body is at most one transaction (≤ 400 000 weight units, ~800 kB hex).

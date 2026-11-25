@@ -9,6 +9,7 @@
     { "name": "rpc0", "rpc": "http://127.0.0.1:18447" }
   ],
   "docsUrl": "https://wharfedalebtc.github.io/wharfedale/",
+  "lendingUrl": "http://localhost:8090",
   "nativeAsset": { "ticker": "WBTC", "name": "Wrapped Bitcoin", "precision": 8 },
   "faucet": { "keyFile": "faucet.json", "amount": 100000, "cooldownMinutes": 10, "minCoins": 20 }
 }

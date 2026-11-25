@@ -14,6 +14,16 @@ export const NAV = [
   { to: '/docs', label: 'Docs', no: '06' },
 ] as const;
 
+type NavItem = { to: string; label: string; no: string; external?: boolean };
+
+/** The top bar's items: NAV, plus the lending app after Assets when the server names one. */
+function useNavItems(): NavItem[] {
+  const lendingUrl = useConfig().data?.lendingUrl;
+  if (!lendingUrl) return [...NAV];
+  const at = NAV.findIndex((n) => n.to === '/assets') + 1;
+  return [...NAV.slice(0, at), { to: lendingUrl, label: 'Lending', no: '↗', external: true }, ...NAV.slice(at)];
+}
+
 function current(to: string, path: string) {
   if (to === '/') return path === '/';
   if (to === '/blocks') return path.startsWith('/block');
@@ -32,16 +42,23 @@ function Logo({ light }: { light?: boolean }) {
 function Header({ over, menu, setMenu }: { over: boolean; menu: boolean; setMenu: (v: boolean) => void }) {
   const chain = useChainInfo().data;
   const path = useLocation().pathname;
+  const nav = useNavItems();
   return (
     <header className={over || menu ? 'site-header site-header--over' : 'site-header'}>
       <div className="site-header__bar">
         <Logo />
         <nav aria-label="Main" className="primary-nav">
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} className="nav-link" aria-current={current(n.to, path) ? 'page' : undefined}>
-              {n.label}
-            </NavLink>
-          ))}
+          {nav.map((n) =>
+            n.external ? (
+              <a key={n.to} href={n.to} className="nav-link">
+                {n.label}
+              </a>
+            ) : (
+              <NavLink key={n.to} to={n.to} className="nav-link" aria-current={current(n.to, path) ? 'page' : undefined}>
+                {n.label}
+              </NavLink>
+            ),
+          )}
         </nav>
         <div className="header-tools">
           <Link to={chain ? `/block-height/${chain.blocks}` : '/blocks'} className="live" aria-label={chain ? `Latest block, height ${chain.blocks}` : 'Connecting to the node'}>
@@ -70,6 +87,7 @@ function Header({ over, menu, setMenu }: { over: boolean; menu: boolean; setMenu
 
 function Menu({ close }: { close: () => void }) {
   const path = useLocation().pathname;
+  const nav = useNavItems();
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -83,12 +101,19 @@ function Menu({ close }: { close: () => void }) {
   return (
     <div id="menu" className="menu on-dark" role="dialog" aria-modal="true" aria-label="Menu">
       <nav aria-label="Main" className="menu__list">
-        {NAV.map((n, i) => (
-          <Link key={n.to} to={n.to} className="menu__link" aria-current={current(n.to, path) ? 'page' : undefined} style={{ '--i': i } as React.CSSProperties} onClick={close}>
-            <span className="index-no">{n.no}</span>
-            {n.label}
-          </Link>
-        ))}
+        {nav.map((n, i) =>
+          n.external ? (
+            <a key={n.to} href={n.to} className="menu__link" style={{ '--i': i } as React.CSSProperties} onClick={close}>
+              <span className="index-no">{n.no}</span>
+              {n.label}
+            </a>
+          ) : (
+            <Link key={n.to} to={n.to} className="menu__link" aria-current={current(n.to, path) ? 'page' : undefined} style={{ '--i': i } as React.CSSProperties} onClick={close}>
+              <span className="index-no">{n.no}</span>
+              {n.label}
+            </Link>
+          ),
+        )}
       </nav>
       <div className="menu__foot">
         <span className="label">Test network · keys stay in this browser</span>

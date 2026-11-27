@@ -9,7 +9,7 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { Client } from '@wharfedale/sdk';
 import { loadConfig } from './config.js';
-import { forwardEsplora, forwardRpc } from './proxy.js';
+import { forwardBroadcast, forwardEsplora, forwardRegistry, forwardRpc } from './proxy.js';
 import { buildGraph } from './network.js';
 import { Faucet, FaucetError } from './faucet.js';
 
@@ -23,12 +23,16 @@ app.get('/api/config', (c) =>
     faucet: config.faucet ? { amount: config.faucet.amount, cooldownMinutes: config.faucet.cooldownMinutes } : null,
     docsUrl: (config.docsUrl ?? 'https://wharfedalebtc.github.io/wharfedale/').replace(/\/?$/, '/'),
     lendingUrl: config.lendingUrl || null,
+    damp: config.damp ? { appUrl: config.damp.appUrl || null } : null,
+    classicAssets: config.classicAssets === true,
   }),
 );
 // A JSON-RPC body is at most one transaction (≤ 400 000 weight units, ~800 kB hex).
 const tooLarge = bodyLimit({ maxSize: 2 * 1024 * 1024, onError: (c) => c.json({ error: 'request too large' }, 413) });
 app.post('/api/node', tooLarge, (c) => forwardRpc(c, config.publicNode));
+app.post('/api/node/tx', tooLarge, (c) => forwardBroadcast(c, config.publicNode));
 app.get('/api/node/*', (c) => forwardEsplora(c, config.publicNode, c.req.path.slice('/api/node/'.length)));
+app.get('/api/registry/*', (c) => (config.damp ? forwardRegistry(c, config.damp.registryUrl, c.req.path.slice('/api/registry/'.length)) : c.json({ error: 'DAMP is not configured' }, 404)));
 app.get('/api/network', async (c) => c.json(await buildGraph(config.nodes)));
 
 app.get('/api/faucet', async (c) => {

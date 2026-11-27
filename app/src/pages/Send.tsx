@@ -5,18 +5,28 @@ import { DEFAULT_FEE, destination } from '@wharfedale/sdk';
 import { Masthead } from '../components/Layout';
 import { Marks } from '../components/motion';
 import { ArrowRight } from '../components/icons';
-import { client, useChainInfo } from '../lib/api';
+import { client, useChainInfo, useConfig } from '../lib/api';
+import { SendPage } from '../damp';
 import { amountText, useAssetView } from '../lib/assets';
 import { formatAmount, parseAmount, short } from '../lib/format';
 import { useActiveWallet } from '../lib/useWallet';
 
 type Status = { kind: 'idle' } | { kind: 'checking' } | { kind: 'ok' } | { kind: 'sending' } | { kind: 'error'; message: string } | { kind: 'sent'; txid: string };
 
+/** `/wallet/send?asset=…`: a regulated asset's transfer, or a plain payment. */
 export function Send() {
   const [params] = useSearchParams();
+  const feeAsset = useChainInfo().data?.feeAsset;
+  const classic = useConfig().data?.classicAssets ?? false;
+  const asset = params.get('asset');
+  if (classic) return <PlainSend asset={asset ?? feeAsset} />;
+  // A regulated asset's page when DAMP knows it; any other asset (WBTC or plain) is a plain payment.
+  return <SendPage asset={asset && asset !== feeAsset ? asset : null} fallback={<PlainSend asset={asset ?? feeAsset} />} />;
+}
+
+function PlainSend({ asset }: { asset: string | undefined }) {
   const { wallet, balances } = useActiveWallet();
   const feeAsset = useChainInfo().data?.feeAsset;
-  const asset = params.get('asset') ?? feeAsset;
   const view = useAssetView(asset ?? undefined);
   const fee = useAssetView(feeAsset);
   const available = balances.data?.find(([id]) => id === asset)?.[1] ?? 0;

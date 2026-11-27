@@ -10,6 +10,7 @@
   ],
   "docsUrl": "https://wharfedalebtc.github.io/wharfedale/",
   "lendingUrl": "http://localhost:8090",
+  "damp": { "registryUrl": "http://localhost:8091/registry/", "appUrl": "http://localhost:8091" },
   "nativeAsset": { "ticker": "WBTC", "name": "Wrapped Bitcoin", "precision": 8 },
   "faucet": { "keyFile": "faucet.json", "amount": 100000, "cooldownMinutes": 10, "minCoins": 20 }
 }

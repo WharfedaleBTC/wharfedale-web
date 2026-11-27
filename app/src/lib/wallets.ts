@@ -55,14 +55,19 @@ export const wallets = {
   },
 };
 
+export function subscribeWallets(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** The active wallet, outside React (the DAMP signer follows it). */
+export function activeStoredWallet(): StoredWallet | null {
+  const s = read();
+  return s.wallets.find((w) => w.name === s.active) ?? null;
+}
+
 export function useWallets() {
-  const store = useSyncExternalStore(
-    (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
-    },
-    read,
-  );
+  const store = useSyncExternalStore(subscribeWallets, read);
   const active = store.wallets.find((w) => w.name === store.active) ?? null;
   // One Key per wallet, so effects that depend on it don't rerun on every render.
   const secret = active?.secret;

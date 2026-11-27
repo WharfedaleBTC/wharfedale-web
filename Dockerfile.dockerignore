@@ -1,9 +1,18 @@
-# Context = parent of wharfedale-web/ and wharfedale-sdk-ts/.
+# Context = parent of wharfedale-web/, wharfedale-sdk-ts/, damp/ and the DAMP workspace's path
+# dependencies (wharfedale/, wharfedale-sdk-rs/, malachite/).
 **/node_modules
 **/dist
 **/target
 **/.git
-malachite
-wharfedale
-wharfedale-sdk-rs
 wharfedale-web/config.json
+damp/apps/web/src/generated
+damp/apps/web/public
+damp/papers
+damp/deps
+wharfedale/docs
+malachite/docs
+malachite/specs
+malachite/terraform
+malachite/assets
+simplicity-lending
+demo-prod

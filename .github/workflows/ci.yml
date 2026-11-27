@@ -5,8 +5,14 @@
 #   push tag vX.Y.Z  → image tags `X.Y.Z`, `X.Y` and `sha-<short>`; a GitHub Release with the built app
 #   pull request     → build only
 #
-# The app depends on the TypeScript SDK by path (`file:../wharfedale-sdk-ts`), so CI checks out
-# WharfedaleBTC/wharfedale-sdk-ts at SDK_TS_REF next to it, as locally.
+# The app builds against sibling checkouts, laid out as locally:
+#   wharfedale-sdk-ts/   the TypeScript SDK (`file:../wharfedale-sdk-ts`), at SDK_TS_REF
+#   damp/                DAMP (regulated assets): its browser modules (@damp/*) and its signer,
+#                        compiled to WebAssembly by the Dockerfile's `wasm` stage, at DAMP_REF
+#   wharfedale/, wharfedale-sdk-rs/, malachite/
+#                        path dependencies of DAMP's Cargo workspace, which Cargo resolves even
+#                        for the wasm build
+# All are public: no token needed.
 name: ci
 
 on:
@@ -25,6 +31,10 @@ concurrency:
 
 env:
   SDK_TS_REF: master
+  DAMP_REF: main
+  WHARFEDALE_REF: master
+  SDK_RS_REF: master
+  MALACHITE_REF: wharfedale/mempool-channel
   IMAGE: ghcr.io/wharfedalebtc/wharfedale-web
   NODE_VERSION: "22.16"
 
@@ -36,9 +46,29 @@ jobs:
         with: { path: wharfedale-web, persist-credentials: false }
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { repository: WharfedaleBTC/wharfedale-sdk-ts, ref: "${{ env.SDK_TS_REF }}", path: wharfedale-sdk-ts, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/damp, ref: "${{ env.DAMP_REF }}", path: damp, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/wharfedale, ref: "${{ env.WHARFEDALE_REF }}", path: wharfedale, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/wharfedale-sdk-rs, ref: "${{ env.SDK_RS_REF }}", path: wharfedale-sdk-rs, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/malachite, ref: "${{ env.MALACHITE_REF }}", path: malachite, persist-credentials: false }
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # The app imports DAMP's signer; the Dockerfile's wasm stage builds it (cached for the image job).
+      - name: DAMP signer (WebAssembly)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: wharfedale-web/Dockerfile
+          target: wasm-pkg
+          outputs: type=local,dest=damp/apps/web/src/generated/damp-signer
+          cache-from: type=gha,scope=wasm
+          cache-to: type=gha,scope=wasm,mode=max
 
       # Lifecycle scripts stay off (.npmrc: ignore-scripts), as in the Dockerfile.
       - name: SDK
@@ -70,6 +100,14 @@ jobs:
         with: { path: wharfedale-web, persist-credentials: false }
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { repository: WharfedaleBTC/wharfedale-sdk-ts, ref: "${{ env.SDK_TS_REF }}", path: wharfedale-sdk-ts, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/damp, ref: "${{ env.DAMP_REF }}", path: damp, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/wharfedale, ref: "${{ env.WHARFEDALE_REF }}", path: wharfedale, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/wharfedale-sdk-rs, ref: "${{ env.SDK_RS_REF }}", path: wharfedale-sdk-rs, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { repository: WharfedaleBTC/malachite, ref: "${{ env.MALACHITE_REF }}", path: malachite, persist-credentials: false }
 
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
@@ -96,7 +134,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=web
+          cache-from: |
+            type=gha,scope=web
+            type=gha,scope=wasm
           cache-to: type=gha,scope=web,mode=max
 
   release:

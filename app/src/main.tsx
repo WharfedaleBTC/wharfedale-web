@@ -16,9 +16,12 @@ import { WalletBackup } from './pages/WalletBackup';
 import { Send } from './pages/Send';
 import { Receive } from './pages/Receive';
 import { Faucet } from './pages/Faucet';
-import { Assets } from './pages/Assets';
+import { PlainAssetsPage } from './pages/AssetList';
+import { CreateAsset } from './pages/CreateAsset';
+import { PlainAsset } from './pages/PlainAsset';
+import { RegulatedAsset, RegulatedAssets } from './damp';
 import { Docs } from './pages/Docs';
-import { client } from './lib/api';
+import { client, useConfig } from './lib/api';
 
 function BlockAtHeight() {
   const { height = '0' } = useParams();
@@ -27,6 +30,23 @@ function BlockAtHeight() {
     client.restText(`block-height/${height}`).then((h) => navigate(`/block/${h.trim()}`, { replace: true }), () => navigate('/blocks', { replace: true }));
   }, [height, navigate]);
   return <main className="shell section"><p className="lead">Loading block {height}…</p></main>;
+}
+
+/**
+ * `/assets`: every asset on the chain. With DAMP configured (and `classicAssets` off) the list
+ * includes the regulated assets of its registry; otherwise only plain assets.
+ */
+function AssetsRoute() {
+  const config = useConfig().data;
+  if (!config) return null;
+  return config.damp && !config.classicAssets ? <RegulatedAssets /> : <PlainAssetsPage />;
+}
+
+/** `/assets/:id`: a regulated asset by deployment id when DAMP knows it, otherwise a plain asset by asset id. */
+function AssetRoute() {
+  const config = useConfig().data;
+  if (!config) return null;
+  return config.damp && !config.classicAssets ? <RegulatedAsset fallback={<PlainAsset />} /> : <PlainAsset />;
 }
 
 const router = createBrowserRouter([
@@ -45,7 +65,9 @@ const router = createBrowserRouter([
       { path: 'wallet/send', element: <Send /> },
       { path: 'wallet/receive', element: <Receive /> },
       { path: 'faucet', element: <Faucet /> },
-      { path: 'assets', element: <Assets /> },
+      { path: 'assets', element: <AssetsRoute /> },
+      { path: 'assets/new', element: <CreateAsset /> },
+      { path: 'assets/:id', element: <AssetRoute /> },
       { path: 'docs', element: <Docs /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],

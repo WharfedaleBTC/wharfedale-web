@@ -13,7 +13,7 @@ const TILES = [
   { to: '/blocks', no: '02', name: 'Explorer', text: 'Blocks, transactions and on-chain asset names. Search by height, hash or txid.', Icon: IconBlocks },
   { to: '/wallet', no: '03', name: 'Wallet', text: 'A recovery phrase, confidential payments, every asset you hold.', Icon: IconWallet },
   { to: '/faucet', no: '04', name: 'Faucet', text: 'Native coins for fees and testing, to any address.', Icon: IconDrop },
-  { to: '/assets', no: '05', name: 'Assets', text: 'Issue a named asset with its ticker and decimals on chain; mint more.', Icon: IconAsset },
+  { to: '/assets', no: '05', name: 'Assets', text: 'Every asset on the chain, plain and regulated; create your own.', Icon: IconAsset },
   { to: '/docs', no: '06', name: 'Docs', text: 'The reference, and the common flows in Rust and TypeScript.', Icon: IconDocs },
 ];
 

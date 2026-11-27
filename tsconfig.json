@@ -11,7 +11,16 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    // DAMP's browser modules, from the sibling checkout (as vite.config.ts aliases them). Their
+    // own imports resolve to this app's packages, so there is one React Query and one React.
+    "paths": {
+      "@damp/*": ["../damp/apps/web/src/lib/*"],
+      "react": ["./node_modules/@types/react"],
+      "@tanstack/react-query": ["./node_modules/@tanstack/react-query"],
+      "zod": ["./node_modules/zod"],
+      "idb": ["./node_modules/idb"]
+    }
   },
   "include": ["app/src", "vite.config.ts"]
 }

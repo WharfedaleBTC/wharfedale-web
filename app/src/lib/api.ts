@@ -10,6 +10,10 @@ export interface AppConfig {
   docsUrl: string;
   /** The lending app, linked from the top bar; null when not configured. */
   lendingUrl: string | null;
+  /** DAMP regulated assets (wallet and Assets page); `appUrl` is the issuer console. */
+  damp: { appUrl: string | null } | null;
+  /** The earlier asset tools (WFA1 issuance, every held asset in the wallet) instead of DAMP. */
+  classicAssets: boolean;
 }
 
 export interface EsploraBlock {
@@ -59,7 +63,8 @@ export interface AssetRecord {
   name?: string | null;
   ticker?: string | null;
   precision?: number | null;
-  chain_stats?: { issued_amount?: number };
+  status?: { confirmed: boolean; block_height?: number };
+  chain_stats?: { issued_amount?: number; issuance_count?: number; reissuance_tokens?: number };
 }
 
 async function json<T>(res: Response): Promise<T> {
@@ -90,6 +95,26 @@ export function useConfig() {
 
 export function useChainInfo() {
   return useQuery({ queryKey: ['chaininfo'], queryFn: () => client.chainInfo(), refetchInterval: 2_000 });
+}
+
+/** Every asset issued on this chain, newest first, from the node's asset registry (paged by 100). */
+export function useAllAssets() {
+  return useQuery({
+    queryKey: ['assets-registry'],
+    refetchInterval: 15_000,
+    queryFn: async () => {
+      const all: AssetRecord[] = [];
+      for (let start = 0; start < 5_000; start += 100) {
+        const res = await fetch(`/api/node/assets/registry?start_index=${start}&limit=100`);
+        if (!res.ok) throw new Error(`The node answered ${res.status}.`);
+        const page = (await res.json()) as AssetRecord[];
+        all.push(...page);
+        const total = Number(res.headers.get('x-total-results') ?? all.length);
+        if (page.length < 100 || all.length >= total) break;
+      }
+      return all;
+    },
+  });
 }
 
 /** The asset record (with on-chain name, if any); `null` for ids without one (tokens, unknown). */

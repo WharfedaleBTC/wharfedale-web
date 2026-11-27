@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueries } from '@tanstack/react-query';
-import { client, useChainInfo, type AssetRecord } from '../lib/api';
+import { client, useChainInfo, useConfig, type AssetRecord } from '../lib/api';
 import { useAssetView } from '../lib/assets';
 import { formatAmount, short } from '../lib/format';
 import { useActiveWallet } from '../lib/useWallet';
@@ -11,6 +11,7 @@ import { ArrowDownLeft, ArrowRight, ArrowUpRight } from '../components/icons';
 import { Marks, Ticker, reveal } from '../components/motion';
 import { Qr } from '../components/Qr';
 import { copyText } from '../lib/clipboard';
+import { RegulatedWalletAssets } from '../damp';
 
 function AssetRow({ id, amount, tokenOf, index }: { id: string; amount: number; tokenOf?: AssetRecord; index: number }) {
   const view = useAssetView(tokenOf ? undefined : id);
@@ -18,13 +19,16 @@ function AssetRow({ id, amount, tokenOf, index }: { id: string; amount: number; 
   const name = tokenOf ? `${parent?.name ?? 'Asset'} token` : (view?.name ?? '…');
   const sub = tokenOf ? `mints more ${parent?.unit ?? ''} · ${id.slice(0, 8)}` : view?.native ? 'native · pays fees' : view ? `${view.unit} · ${id.slice(0, 8)}` : id.slice(0, 8);
   const shown = tokenOf ? String(amount) : formatAmount(amount, view?.precision ?? 0);
+  const page = !tokenOf && view && !view.native ? `/assets/${id}` : null;
   return (
-    <li className="asset-row" {...reveal('up', index * 60)}>
+    <li className={page ? 'asset-row asset-row--link' : 'asset-row'} {...reveal('up', index * 60)}>
+      {page && <Link className="asset-row__hit" to={page} aria-label={`${name}: details`} />}
       <div style={{ minWidth: 0 }}>
         <div className="row" style={{ gap: '0.5rem 0.75rem' }}>
           <span className="index__title">{name}</span>
           {view?.native && <span className="badge badge--accent">native</span>}
           {tokenOf && <span className="badge">token</span>}
+          {page && <span className="badge">plain</span>}
         </div>
         <span className="data" style={{ display: 'block', marginTop: '0.375rem' }}>{sub}</span>
       </div>
@@ -81,7 +85,11 @@ export function WalletHome() {
   const { store, active, balances } = useActiveWallet();
   const { key } = useWallets();
   const feeAsset = useChainInfo().data?.feeAsset;
-  const held = balances.data ?? [];
+  // Everything the wallet key holds (WBTC first, then plain assets, then their tokens); regulated
+  // assets follow, from their holder covenants. `classicAssets` turns the regulated part off.
+  const classic = useConfig().data?.classicAssets ?? false;
+  const all = balances.data ?? [];
+  const held: [string, number][] = feeAsset && !all.some(([id]) => id === feeAsset) ? [[feeAsset, 0], ...all] : all;
   // Asset records of held assets tell which held ids are their reissuance tokens.
   const records = useQueries({
     queries: held
@@ -95,7 +103,7 @@ export function WalletHome() {
   if (!active || !key) {
     return (
       <main>
-        <Masthead no="03" section="Wallet" title="Your wallet" lede="A recovery phrase, confidential payments and every asset you hold. Keys are made and kept in this browser." />
+        <Masthead no="03" section="Wallet" title="Your wallet" lede={classic ? 'A recovery phrase, confidential payments and every asset you hold. Keys are made and kept in this browser.' : 'A recovery phrase, confidential payments, your WBTC and the regulated assets you hold. Keys are made and kept in this browser.'} />
         <section className="shell section section--snug">
           <ol className="index" style={{ borderTop: 0 }}>
             {[
@@ -125,7 +133,7 @@ export function WalletHome() {
         no="03"
         section="Wallet"
         title={active.name}
-        lede="Every asset this wallet holds, confirmed on chain."
+        lede="Your WBTC and every asset you hold, confirmed on chain."
         aside={
           <div className="stack-md">
             <div className="field">
@@ -149,7 +157,7 @@ export function WalletHome() {
           <div className="split__main">
             <h2 className="label label--mark">Assets</h2>
             {balances.isError && <p className="notice notice--danger" style={{ marginTop: '1rem' }}>Can't load balances.</p>}
-            {balances.data && held.length === 0 && (
+            {balances.data && all.length === 0 && classic && (
               <div className="notice" style={{ marginTop: '1.5rem' }}>
                 <strong>Nothing here yet.</strong> <Link className="text-link" to="/faucet">Get test coins</Link> or share your address to receive.
               </div>
@@ -158,6 +166,7 @@ export function WalletHome() {
               {ordered.map(([id, amount], i) => (
                 <AssetRow key={id} id={id} amount={amount} tokenOf={tokenOf.get(id)} index={i} />
               ))}
+              {!classic && <RegulatedWalletAssets offset={ordered.length} />}
             </ul>
           </div>
           <div className="split__aside sticky">

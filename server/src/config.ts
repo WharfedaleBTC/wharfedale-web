@@ -31,6 +31,18 @@ export interface Config {
   docsUrl?: string;
   /** The lending app (simplicity-lending); when set, the top bar links to it after Assets. */
   lendingUrl?: string;
+  /**
+   * DAMP regulated assets: the wallet holds, sends and receives them, and the Assets page lists the
+   * registry's deployments. `registryUrl` is the DAMP registry directory (served read-only under
+   * /api/registry/); `appUrl` is the DAMP issuer console, linked from the Assets page. Without
+   * it the wallet holds WBTC only.
+   */
+  damp?: { registryUrl: string; appUrl?: string };
+  /**
+   * The earlier asset tools: the Assets page issues WFA1-named assets, and the wallet lists and
+   * sends every asset it holds. Hidden by default; true brings them back in place of DAMP.
+   */
+  classicAssets?: boolean;
   /** Folder with the built app; default dist/app next to the server. */
   staticDir?: string;
 }

@@ -16,12 +16,16 @@ export const NAV = [
 
 type NavItem = { to: string; label: string; no: string; external?: boolean };
 
-/** The top bar's items: NAV, plus the lending app after Assets when the server names one. */
+/**
+ * The top bar's items: NAV, without Assets when there is nothing behind it (no DAMP and no
+ * classicAssets), plus the lending app after Assets when the server names one.
+ */
 function useNavItems(): NavItem[] {
-  const lendingUrl = useConfig().data?.lendingUrl;
-  if (!lendingUrl) return [...NAV];
-  const at = NAV.findIndex((n) => n.to === '/assets') + 1;
-  return [...NAV.slice(0, at), { to: lendingUrl, label: 'Lending', no: '↗', external: true }, ...NAV.slice(at)];
+  const config = useConfig().data;
+  const items: NavItem[] = NAV.filter((n) => n.to !== '/assets' || !config || config.classicAssets || config.damp);
+  if (!config?.lendingUrl) return items;
+  const at = Math.max(items.findIndex((n) => n.to === '/assets'), items.findIndex((n) => n.to === '/faucet')) + 1;
+  return [...items.slice(0, at), { to: config.lendingUrl, label: 'Lending', no: '↗', external: true }, ...items.slice(at)];
 }
 
 function current(to: string, path: string) {

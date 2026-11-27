@@ -1,11 +1,24 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useChainInfo, useConfig } from '../lib/api';
+import { ReceivePage } from '../damp';
 import { Masthead } from '../components/Layout';
 import { Marks } from '../components/motion';
 import { Qr } from '../components/Qr';
 import { useWallets } from '../lib/wallets';
 import { copyText } from '../lib/clipboard';
 
+/** `/wallet/receive?asset=…`: a regulated asset's holder address, or the wallet address. */
 export function Receive() {
+  const [params] = useSearchParams();
+  const feeAsset = useChainInfo().data?.feeAsset;
+  const classic = useConfig().data?.classicAssets ?? false;
+  const asset = params.get('asset');
+  if (classic) return <PlainReceive classic />;
+  return <ReceivePage asset={asset && asset !== feeAsset ? asset : null} fallback={<PlainReceive classic={false} />} />;
+}
+
+function PlainReceive({ classic }: { classic: boolean }) {
   const { active, key } = useWallets();
   const [explicit, setExplicit] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -24,7 +37,13 @@ export function Receive() {
         section="Receive"
         title="Receive"
         back={{ to: '/wallet', label: 'Wallet' }}
-        lede={explicit ? 'Payments to this address show their amount and asset on chain.' : 'One address takes every asset. Payments to it hide the amount and asset on chain.'}
+        lede={
+          explicit
+            ? 'Payments to this address show their amount and asset on chain.'
+            : classic
+              ? 'One address takes every asset. Payments to it hide the amount and asset on chain.'
+              : 'Your WBTC address. Payments to it hide the amount on chain. Each regulated asset has its own holder address, on its Receive page.'
+        }
       />
       <section className="shell section section--snug">
         <div className="split" style={{ alignItems: 'center' }}>

@@ -11,9 +11,28 @@ import { ArrowDownLeft, ArrowRight, ArrowUpRight } from '../components/icons';
 import { Marks, Ticker, reveal } from '../components/motion';
 import { Qr } from '../components/Qr';
 import { copyText } from '../lib/clipboard';
+import { useHiddenAssets } from '../lib/hidden';
 import { RegulatedWalletAssets } from '../damp';
 
-function AssetRow({ id, amount, tokenOf, index }: { id: string; amount: number; tokenOf?: AssetRecord; index: number }) {
+type Visibility = { hidden: boolean; onHide: () => void; onShow: () => void };
+
+/** The confirmation under a row before hiding it. */
+function HideConfirm({ name, onHide, onCancel }: { name: string; onHide: () => void; onCancel: () => void }) {
+  return (
+    <div className="confirm" role="alertdialog" aria-label={`Hide ${name}`}>
+      <p>
+        <strong>Hide {name} from this wallet?</strong> It only hides the row here. Your coins stay on chain under your key; show it again from the bottom of this list.
+      </p>
+      <div className="button-row">
+        <button className="button button--sm button--danger" type="button" onClick={onHide}>Hide</button>
+        <button className="button button--sm button--secondary" type="button" onClick={onCancel}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+function AssetRow({ id, amount, tokenOf, index, visibility }: { id: string; amount: number; tokenOf?: AssetRecord; index: number; visibility?: Visibility }) {
+  const [confirming, setConfirming] = useState(false);
   const view = useAssetView(tokenOf ? undefined : id);
   const parent = useAssetView(tokenOf?.asset_id);
   const name = tokenOf ? `${parent?.name ?? 'Asset'} token` : (view?.name ?? '…');
@@ -21,7 +40,7 @@ function AssetRow({ id, amount, tokenOf, index }: { id: string; amount: number; 
   const shown = tokenOf ? String(amount) : formatAmount(amount, view?.precision ?? 0);
   const page = !tokenOf && view && !view.native ? `/assets/${id}` : null;
   return (
-    <li className={page ? 'asset-row asset-row--link' : 'asset-row'} {...reveal('up', index * 60)}>
+    <li className={`${page ? 'asset-row asset-row--link' : 'asset-row'}${visibility?.hidden ? ' asset-row--hidden' : ''}`} {...reveal('up', index * 60)}>
       {page && <Link className="asset-row__hit" to={page} aria-label={`${name}: details`} />}
       <div style={{ minWidth: 0 }}>
         <div className="row" style={{ gap: '0.5rem 0.75rem' }}>
@@ -43,7 +62,16 @@ function AssetRow({ id, amount, tokenOf, index }: { id: string; amount: number; 
         <Link to="/wallet/receive" className="button button--sm button--secondary">
           Receive <ArrowDownLeft />
         </Link>
+        {visibility &&
+          (visibility.hidden ? (
+            <button className="button button--sm button--ghost" type="button" onClick={visibility.onShow}>Show</button>
+          ) : (
+            <button className="icon-x" type="button" aria-label={`Hide ${name} from this wallet`} aria-expanded={confirming} onClick={() => setConfirming((c) => !c)}>
+              ×
+            </button>
+          ))}
       </div>
+      {confirming && visibility && !visibility.hidden && <HideConfirm name={name} onCancel={() => setConfirming(false)} onHide={() => { setConfirming(false); visibility.onHide(); }} />}
     </li>
   );
 }
@@ -98,6 +126,9 @@ export function WalletHome() {
   });
   const tokenOf = new Map<string, AssetRecord>();
   for (const r of records) if (r.data?.reissuance_token) tokenOf.set(r.data.reissuance_token, r.data);
+  const address = key?.address();
+  const { hidden, hide, show } = useHiddenAssets(address);
+  const [showHidden, setShowHidden] = useState(false);
   const ordered = [...held].sort(([a], [b]) => (a === feeAsset ? -1 : b === feeAsset ? 1 : Number(tokenOf.has(a)) - Number(tokenOf.has(b))));
 
   if (!active || !key) {
@@ -163,11 +194,33 @@ export function WalletHome() {
               </div>
             )}
             <ul style={{ marginTop: '1rem', borderTop: '1px solid var(--ink)' }}>
-              {ordered.map(([id, amount], i) => (
-                <AssetRow key={id} id={id} amount={amount} tokenOf={tokenOf.get(id)} index={i} />
-              ))}
+              {ordered
+                .filter(([id]) => showHidden || !hidden.has(id))
+                .map(([id, amount], i) => (
+                  <AssetRow
+                    key={id}
+                    id={id}
+                    amount={amount}
+                    tokenOf={tokenOf.get(id)}
+                    index={i}
+                    // WBTC pays every fee, so it is always listed.
+                    visibility={id === feeAsset ? undefined : { hidden: hidden.has(id), onHide: () => hide(id), onShow: () => show(id) }}
+                  />
+                ))}
               {!classic && <RegulatedWalletAssets offset={ordered.length} />}
             </ul>
+            {(() => {
+              const count = ordered.filter(([id]) => hidden.has(id)).length;
+              if (!count) return null;
+              return (
+                <p className="hint" style={{ marginTop: '1rem' }}>
+                  {count} hidden {count === 1 ? 'asset' : 'assets'} ·{' '}
+                  <button className="text-button link-rule" type="button" onClick={() => setShowHidden((v) => !v)}>
+                    {showHidden ? 'Hide them' : 'Show them'}
+                  </button>
+                </p>
+              );
+            })()}
           </div>
           <div className="split__aside sticky">
             <ReceiveCard address={key.address()} />

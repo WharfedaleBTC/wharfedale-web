@@ -819,11 +819,14 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 .asset-row--link .asset-row__actions, .asset-row--link .confirm { position: relative; z-index: 1; }
 .icon-x { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border: 1px solid var(--ink-15); background: transparent; color: var(--ink-3); font-size: 1.125rem; line-height: 1; cursor: pointer; transition: color 0.3s var(--ease), border-color 0.3s var(--ease), background-color 0.3s var(--ease); }
 .icon-x:hover, .icon-x[aria-expanded='true'] { color: var(--danger); border-color: var(--danger); background: var(--danger-tint); }
+/* A hidden plain asset or token, listed while "Show them" is on: dimmed, with Show in place of ×. */
+.asset-row--hidden > :not(.asset-row__actions) { opacity: 0.45; }
 .confirm { grid-column: 1 / -1; order: 4; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; background: var(--surface); border-left: 2px solid var(--danger); }
 .confirm p { margin: 0; font-size: 0.875rem; line-height: 1.55; color: var(--ink-2); max-width: 42rem; }
 .facts { display: grid; grid-template-columns: 9rem minmax(0, 1fr); border-top: 1px solid var(--ink); margin: 0; }
 .facts dt, .facts dd { margin: 0; padding: 0.875rem 0; border-bottom: 1px solid var(--line); font-size: 0.9375rem; }
-.facts dt { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); align-self: center; }
+/* Each label cell stretches to its row's height, so the label's rule lines up with the value's. */
+.facts dt { display: flex; align-items: center; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
 .ledger { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .ledger th { padding: 0.75rem 1rem 0.75rem 0; border-bottom: 1px solid var(--ink); text-align: left; font-family: var(--font-mono); font-size: 0.5625rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); font-weight: 400; }
 .ledger td { padding: 1rem 1rem 1rem 0; border-bottom: 1px solid var(--line); vertical-align: middle; overflow-wrap: anywhere; }

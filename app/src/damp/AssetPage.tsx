@@ -33,9 +33,9 @@ function PolicyHistory({ events }: { events: PolicyEvent[] }) {
     <>
       <ol className="index">
         {view.rows.map((event) => (
-          <li key={event.snapshot.policyRoot + event.snapshot.sequence}>
+          <li key={event.number}>
             <div className="index__row">
-              <span className="index-no">#{event.snapshot.sequence + 1}</span>
+              <span className="index-no">#{event.number}</span>
               <span>
                 <span className="index__title" style={{ display: 'block' }}>{describePolicyEvent(event)}</span>
                 <span className="index__text" style={{ display: 'block' }}>
@@ -176,9 +176,9 @@ export function RegulatedAssetPage({ fallback }: { fallback?: ReactNode }) {
             <dt>Supply</dt>
             <dd>{deployment.supplyMode === 'issuer-managed' ? 'Issuer managed, can mint more' : 'Fixed, nobody can mint more'}</dd>
             <dt>Blacklist</dt>
-            <dd>{policy ? `${policy.entryCount} of ${2 ** policy.treeDepth} coins blocked` : timeline.isPending ? 'Checking…' : '—'}</dd>
+            <dd>{policy ? (policy.entryCount ? `${policy.entryCount} coin${policy.entryCount === 1 ? '' : 's'} blocked` : 'No coins blocked') : timeline.isPending ? 'Checking…' : '—'}</dd>
             <dt>Policy</dt>
-            <dd>{active ? `#${active.snapshot.sequence + 1}${active.blockHeight !== undefined ? `, since block ${active.blockHeight.toLocaleString('en-US')}` : ''}` : timeline.isPending ? 'Checking…' : '—'}</dd>
+            <dd>{active ? `#${active.number}${active.blockHeight !== undefined ? `, since block ${active.blockHeight.toLocaleString('en-US')}` : ''}` : timeline.isPending ? 'Checking…' : '—'}</dd>
           </dl>
           {timeline.error && <p className="notice notice--danger" role="alert">Couldn't read the policy: {userFacingError(timeline.error)}</p>}
           {held && (
@@ -187,7 +187,7 @@ export function RegulatedAssetPage({ fallback }: { fallback?: ReactNode }) {
             </Section>
           )}
           {policy && (
-            <Section label="Policy" title="Blacklist" aside={<span className="badge">{policy.entryCount} of {2 ** policy.treeDepth}</span>}>
+            <Section label="Policy" title="Blacklist" aside={<span className="badge">{policy.entryCount} blocked</span>}>
               <p className="hint">The verifier refuses any transfer that spends one of these exact coins. Notes are the issuer's and public.</p>
               {policy.entries.length ? (
                 <table className="ledger">

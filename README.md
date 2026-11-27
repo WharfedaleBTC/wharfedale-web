@@ -72,9 +72,14 @@ confirmed coins.
 | `faucet` | `{keyFile, amount, cooldownMinutes, minCoins}`; omit to disable |
 | `trustProxy` | `true` behind a reverse proxy: the faucet takes the client IP from the last `X-Forwarded-For` entry. Default `false` (socket address): never enable it without a proxy, or clients can pick their own IP |
 | `docsUrl` | Base URL of the node's mdBook; default `https://wharfedalebtc.github.io/wharfedale/` |
+| `publicRpcUrl` | The public node's address as visitors reach it, shown in the Docs examples; default `http://127.0.0.1:18447` |
 | `lendingUrl` | The lending app ([simplicity-lending](https://github.com/WharfedaleBTC/simplicity-lending)); when set, the top bar links to it after Assets. Omit to hide the link |
 | `damp` | `{registryUrl, appUrl}`: the DAMP registry directory (served by the DAMP app at `/registry/`) and the DAMP issuer console. Omit for a WBTC-only wallet and no Assets page |
 | `classicAssets` | `true` restores the earlier asset tools in place of DAMP (see above). Default `false` |
+
+The public addresses can also be set from the environment, which wins over the file:
+`PUBLIC_RPC_URL` (`publicRpcUrl`), `LENDING_URL` (`lendingUrl`) and `DAMP_URL` (`damp.appUrl`,
+when `damp` is set). A deployment can then keep every address visitors see in one `.env`.
 
 ## Run
 

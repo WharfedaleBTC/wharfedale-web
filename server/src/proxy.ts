@@ -27,7 +27,7 @@ const ESPLORA_PATHS = [
   /^assets\/registry$/,
   new RegExp(`^asset/${HEX64}$`),
   new RegExp(`^asset/${HEX64}/txs/chain(/${HEX64})?$`),
-  /^address\/[a-z0-9]{10,120}(\/utxo|\/txs)?$/,
+  /^address\/[a-z0-9]{10,200}(\/utxo|\/txs)?$/,
   /^mempool\/txids$/,
   /^fee-estimates$/,
 ];

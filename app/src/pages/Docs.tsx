@@ -64,6 +64,9 @@ function useActive(ids: string[]) {
 
 export function Docs() {
   const docsUrl = useConfig().data?.docsUrl ?? 'https://wharfedalebtc.github.io/wharfedale/';
+  // The examples name the local network's full node; show this deployment's public node instead.
+  const rpc = useConfig().data?.publicRpcUrl ?? 'http://127.0.0.1:18447';
+  const withRpc = (code: string) => code.split('http://127.0.0.1:18447').join(rpc);
   const [lang, setLang] = useState<Lang>(savedLang);
   const active = useActive(EXAMPLES.map((e) => e.id));
   const choose = (l: Lang) => {
@@ -142,7 +145,7 @@ export function Docs() {
                     <p className="hint" style={{ marginTop: '0.5rem', maxWidth: '42rem', fontSize: '0.9375rem' }}>{e.text}</p>
                   </div>
                 </div>
-                <Code code={lang === 'rust' ? e.rust : e.ts} file={lang === 'rust' ? 'main.rs' : 'main.ts'} label={`${e.title}, ${lang === 'rust' ? 'Rust' : 'TypeScript'}`} />
+                <Code code={withRpc(lang === 'rust' ? e.rust : e.ts)} file={lang === 'rust' ? 'main.rs' : 'main.ts'} label={`${e.title}, ${lang === 'rust' ? 'Rust' : 'TypeScript'}`} />
               </li>
             ))}
           </ol>

@@ -23,6 +23,7 @@ app.get('/api/config', (c) =>
     faucet: config.faucet ? { amount: config.faucet.amount, cooldownMinutes: config.faucet.cooldownMinutes } : null,
     docsUrl: (config.docsUrl ?? 'https://wharfedalebtc.github.io/wharfedale/').replace(/\/?$/, '/'),
     lendingUrl: config.lendingUrl || null,
+    publicRpcUrl: (config.publicRpcUrl || 'http://127.0.0.1:18447').replace(/\/+$/, ''),
     damp: config.damp ? { appUrl: config.damp.appUrl || null } : null,
     classicAssets: config.classicAssets === true,
   }),

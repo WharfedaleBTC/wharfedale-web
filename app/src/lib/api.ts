@@ -8,6 +8,8 @@ export interface AppConfig {
   nativeAsset: { ticker: string; name: string; precision: number };
   faucet: { amount: number; cooldownMinutes: number } | null;
   docsUrl: string;
+  /** The public node as visitors reach it, for the Docs examples. */
+  publicRpcUrl: string;
   /** The lending app, linked from the top bar; null when not configured. */
   lendingUrl: string | null;
   /** DAMP regulated assets (wallet and Assets page); `appUrl` is the issuer console. */

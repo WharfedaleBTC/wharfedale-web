@@ -19,6 +19,7 @@ import { Faucet } from './pages/Faucet';
 import { PlainAssetsPage } from './pages/AssetList';
 import { CreateAsset } from './pages/CreateAsset';
 import { PlainAsset } from './pages/PlainAsset';
+import { AddressPage, TxRoute } from './pages/Tx';
 import { RegulatedAsset, RegulatedAssets } from './damp';
 import { Docs } from './pages/Docs';
 import { client, useConfig } from './lib/api';
@@ -57,6 +58,8 @@ const router = createBrowserRouter([
       { path: 'blocks', element: <Blocks /> },
       { path: 'block/:hash', element: <Block /> },
       { path: 'block-height/:height', element: <BlockAtHeight /> },
+      { path: 'tx/:txid', element: <TxRoute /> },
+      { path: 'address/:address', element: <AddressPage /> },
       { path: 'network', element: <Navigate to="/" replace /> },
       { path: 'wallet', element: <WalletHome /> },
       { path: 'wallet/new', element: <WalletNew /> },

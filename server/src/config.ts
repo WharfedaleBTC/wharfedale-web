@@ -29,6 +29,11 @@ export interface Config {
   trustProxy?: boolean;
   /** Base URL of the mdBook docs (the Docs page links into it). */
   docsUrl?: string;
+  /**
+   * The public node's address as visitors reach it (JSON-RPC and Esplora), shown in the Docs
+   * examples; default the local network's full node, http://127.0.0.1:18447.
+   */
+  publicRpcUrl?: string;
   /** The lending app (simplicity-lending); when set, the top bar links to it after Assets. */
   lendingUrl?: string;
   /**
@@ -47,8 +52,22 @@ export interface Config {
   staticDir?: string;
 }
 
+/**
+ * The public addresses can also come from the environment, which wins over the file, so a
+ * deployment keeps every address visitors see in one place (demo-prod's .env):
+ * PUBLIC_RPC_URL (`publicRpcUrl`), LENDING_URL (`lendingUrl`) and DAMP_URL (`damp.appUrl`, used
+ * when `damp` is configured). Unset or empty variables leave the file's values.
+ */
+export function publicUrlsFromEnv(c: Config, env: NodeJS.ProcessEnv = process.env): Config {
+  const value = (name: string) => env[name]?.trim() || undefined;
+  const publicRpcUrl = value('PUBLIC_RPC_URL') ?? c.publicRpcUrl;
+  const lendingUrl = value('LENDING_URL') ?? c.lendingUrl;
+  const damp = c.damp && { ...c.damp, appUrl: value('DAMP_URL') ?? c.damp.appUrl };
+  return { ...c, publicRpcUrl, lendingUrl, damp };
+}
+
 export function loadConfig(path = process.env.WHARFEDALE_WEB_CONFIG ?? 'config.json'): Config {
   const c = JSON.parse(readFileSync(path, 'utf8')) as Config;
   if (!c.publicNode || !Array.isArray(c.nodes)) throw new Error(`${path}: publicNode and nodes are required`);
-  return { ...c, listen: c.listen ?? '127.0.0.1:8080' };
+  return publicUrlsFromEnv({ ...c, listen: c.listen ?? '127.0.0.1:8080' });
 }

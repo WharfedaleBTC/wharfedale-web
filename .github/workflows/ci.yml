@@ -31,7 +31,7 @@ concurrency:
 
 env:
   SDK_TS_REF: master
-  DAMP_REF: main
+  DAMP_REF: wharfedale
   WHARFEDALE_REF: master
   SDK_RS_REF: master
   MALACHITE_REF: wharfedale/mempool-channel

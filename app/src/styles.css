@@ -811,12 +811,11 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 .search { position: relative; display: block; }
 .search svg { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--ink-3); pointer-events: none; }
 .search .input { padding-left: 2.75rem; }
-.asset-row--link { position: relative; transition: background-color 0.45s var(--ease), padding 0.45s var(--ease); }
-.asset-row--link::before { content: ''; position: absolute; left: 0; top: -1px; bottom: -1px; width: 3px; background: var(--accent); transform: scaleY(0); transform-origin: bottom; transition: transform 0.45s var(--ease); }
-.asset-row--link .index__title { transition: color 0.45s var(--ease); }
-.asset-row--link:hover, .asset-row--link:focus-within { background: var(--surface); padding-inline: 1rem; }
-.asset-row--link:hover::before, .asset-row--link:focus-within::before { transform: scaleY(1); }
-.asset-row--link:hover .index__title { color: var(--signal); }
+/* Hover marks the row with one accent line in the gutter, drawn top to bottom and leaving
+   downward, as the nav underline draws: the row itself keeps its colour and place. */
+.asset-row--link { position: relative; }
+.asset-row--link::before { content: ''; position: absolute; left: -0.875rem; top: 1rem; bottom: 1rem; width: 3px; background: var(--accent); transform: scaleY(0); transform-origin: bottom; transition: transform var(--slow) var(--ease); }
+.asset-row--link:hover::before, .asset-row--link:focus-within::before { transform: scaleY(1); transform-origin: top; }
 .asset-row__hit { position: absolute; inset: 0; z-index: 0; }
 .asset-row--link .asset-row__actions, .asset-row--link .confirm { position: relative; z-index: 1; }
 .icon-x { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border: 1px solid var(--ink-15); background: transparent; color: var(--ink-3); font-size: 1.125rem; line-height: 1; cursor: pointer; transition: color 0.3s var(--ease), border-color 0.3s var(--ease), background-color 0.3s var(--ease); }

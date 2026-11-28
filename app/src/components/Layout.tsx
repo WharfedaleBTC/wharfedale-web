@@ -305,7 +305,8 @@ export function Masthead({ no, section, title, lede, aside, back }: { no: string
 }
 
 /** A section's heading: marker, title, an optional aside, a hairline under it. */
-export function SectionHead({ label, title, aside, id }: { label: string; title: string; aside?: ReactNode; id?: string }) {
+/** `asideAction`: the aside is a button or link, aligned to the right edge (else it is a note). */
+export function SectionHead({ label, title, aside, asideAction, id }: { label: string; title: string; aside?: ReactNode; asideAction?: boolean; id?: string }) {
   return (
     <div className="section-head">
       <div className="section-head__main">
@@ -317,7 +318,7 @@ export function SectionHead({ label, title, aside, id }: { label: string; title:
         </h2>
       </div>
       {aside && (
-        <div className="section-head__aside" {...reveal('up', 160)}>
+        <div className={asideAction ? 'section-head__aside section-head__aside--action' : 'section-head__aside'} {...reveal('up', 160)}>
           {aside}
         </div>
       )}

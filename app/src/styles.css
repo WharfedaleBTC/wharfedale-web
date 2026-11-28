@@ -292,6 +292,8 @@ a.text-link:hover { text-decoration-color: currentColor; }
 @media (width >= 64rem) {
   .section-head > .section-head__main { grid-column: span 7; }
   .section-head > .section-head__aside { grid-column: 9 / span 4; justify-self: start; }
+  /* An action (a button, not a note) sits flush with the right edge. */
+  .section-head > .section-head__aside--action { justify-self: end; }
 }
 .on-dark .section-head { border-bottom-color: var(--paper-15); }
 .on-dark .section-head__aside { color: var(--paper-70); }

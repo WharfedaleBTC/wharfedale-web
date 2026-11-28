@@ -179,6 +179,7 @@ export function Home() {
           id="recent-h"
           label="Explorer"
           title="Latest blocks"
+          asideAction
           aside={
             <Link to="/blocks" className="button button--secondary">
               All blocks <ArrowRight />

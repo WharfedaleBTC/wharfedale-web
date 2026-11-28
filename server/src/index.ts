@@ -58,6 +58,8 @@ app.post('/api/faucet', bodyLimit({ maxSize: 4096, onError: (c) => c.json({ erro
 const here = dirname(fileURLToPath(import.meta.url));
 const staticDir = config.staticDir ?? join(here, '..', 'app');
 if (existsSync(staticDir)) {
+  // Browsers that ignore the <link rel="icon"> ask for /favicon.ico: not the SPA page.
+  app.get('/favicon.ico', (c) => c.redirect('/favicon.svg', 301));
   app.use('/*', serveStatic({ root: staticDir }));
   app.get('*', serveStatic({ root: staticDir, path: 'index.html' }));
 }
